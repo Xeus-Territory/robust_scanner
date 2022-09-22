@@ -1,0 +1,6 @@
+pyfiglet
+python-Wappalyzer
+python-owasp-zap-v2.4
+python-dotenv
+terminaltables
+tinydb 
