@@ -123,34 +123,28 @@ if (VUL_SCAN_OPT == 'y'):
     if  opt.aV == 'start':
         vul_scanner.start(scan_name=SCAN_NAME, target=url)
         time.sleep(1)
-        print('Time taken:', time.time() - start_time)
     
     if opt.aV == 'pause':
         vul_scanner.pause(scan_name=SCAN_NAME)
         time.sleep(1)
-        print('Time taken:', time.time() - start_time)
         
     if opt.aV == 'resume':
         vul_scanner.resume(scan_name=SCAN_NAME)
-        time.sleep(1)
-        print('Time taken:', time.time() - start_time)     
+        time.sleep(1)  
     
     if opt.aV == 'stop':
         vul_scanner.stop(scan_name=SCAN_NAME)
         time.sleep(1)
-        print('Time taken:', time.time() - start_time)
     
     if opt.aV == 'status':
         vul_scanner.get_scan_status(scan_name=SCAN_NAME, scan_status_list=scan_status_list)
         time.sleep(1)
         vul_scanner.print_scan_status(scan_status_list)
-        print('Time taken:', time.time() - start_time)
         
     if opt.aV == 'result':
         vul_scanner.get_scan_results(scan_name=SCAN_NAME, scan_results=scan_results)
         time.sleep(1)
         vul_scanner.print_report(scan_results)
-        print('Time taken:', time.time() - start_time)
 
         
 
