@@ -29,9 +29,10 @@ class zapScanner(Scanner):
         'Informational': 0 
     }
     
-    def __init__(self):
+    def __init__(self, re_state=False):
         self.zap = ZAPv2(apikey=API_KEY)
         self.storage_service = Storage_Service()
+        self.re_state=re_state
         
     def start(self, scan_name, target):
         print(f'[{self.name}] Starting Scan for Target: {target}')

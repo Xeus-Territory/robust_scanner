@@ -3,4 +3,8 @@ python-Wappalyzer
 python-owasp-zap-v2.4
 python-dotenv
 terminaltables
-tinydb 
+tinydb
+flask-restful
+flask_restplus
+mitrecve
+pycvesearch

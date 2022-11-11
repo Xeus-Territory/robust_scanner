@@ -7,10 +7,11 @@ from concurrent.futures import ThreadPoolExecutor
 from terminaltables import SingleTable
 
 class PortScan:
-    def __init__(self, host, port, protocolname):
+    def __init__(self, host, port, protocolname, re_state=False):
         self.host = host
         self.ports = port
         self.protocolname = protocolname
+        self.re_state = re_state
         
     def find_service_name(self, port):
         try:
@@ -59,11 +60,30 @@ class PortScan:
             return False
             
     def port_scan(self):
-        print(f'Host: {self.host} via IP address: {gethostbyname(self.host)}')
-        port_report = []
-        port_report.append(['PORT', 'STATE', 'NAME SERVICE'])
-        # print('\t\tPORT\t\tSTATE\t\tNAME SERVICE\t\t')
-        for port in self.ports:
+        if self.re_state == False:
+            print(f'Host: {self.host} via IP address: {gethostbyname(self.host)}')
+            port_report = []
+            port_report.append(['PORT', 'STATE', 'NAME SERVICE'])
+            # print('\t\tPORT\t\tSTATE\t\tNAME SERVICE\t\t')
+            for port in self.ports:
+                if self.test_port_number_particular(self.host, port):
+                    try:
+                        pro_name, ser_name = self.find_service_name(port)
+                        port_report.append([str(port) + '/' + pro_name, 'open', ser_name])
+                        # print(f'\t\t{port}/{pro_name}\t\topen\t\t{ser_name}')
+                    except OSError:
+                        port_report.append([str(port) + '/' + pro_name, 'close', ser_name])
+                    except:
+                        port_report.append([str(port) + '/' + pro_name, 'close', ser_name])
+                        # print(f'\t\t{port}/{pro_name}\t\tclose\t\t{ser_name}')
+                    
+            port_report_table = SingleTable(port_report)
+            port_report_table.title = 'Find Port...'
+            print(port_report_table.table) 
+        if self.re_state == True:
+            info = f'Host: {self.host} via IP address: {gethostbyname(self.host)}'
+            port_report = []
+            port = self.ports
             if self.test_port_number_particular(self.host, port):
                 try:
                     pro_name, ser_name = self.find_service_name(port)
@@ -71,33 +91,50 @@ class PortScan:
                     # print(f'\t\t{port}/{pro_name}\t\topen\t\t{ser_name}')
                 except OSError:
                     port_report.append([str(port) + '/' + pro_name, 'close', ser_name])
+                except:
+                    port_report.append([str(port) + '/' + pro_name, 'close', ser_name])
                     # print(f'\t\t{port}/{pro_name}\t\tclose\t\t{ser_name}')
-        port_report_table = SingleTable(port_report)
-        port_report_table.title = 'Find Port...'
-        print(port_report_table.table)            
-        
-                
-                
+            print(port_report)
+            
+            return info, port_report
+                      
     
     def port_scan_forrange(self):
-        # Create thread pool for Up speed scan for tool 
-        with ThreadPoolExecutor(len(self.ports)) as executor:
-            # Do test port number with host on pool of thread
-            results = executor.map(self.test_port_number_forrange, [self.host]*len(self.ports), self.ports)
-            print(f'Host: {self.host} via IP address: [{gethostbyname(self.host)}]')
-            port_report = []
-            port_report.append(['PORT', 'STATE', 'NAME SERVICE'])
-            # Report results
-            # print('\t\tPORT\t\tSTATE\t\tNAME SERVICE\t\t')
-            for port, is_open in zip(self.ports, results):
-                if is_open:
-                    pro_name, ser_name = self.find_service_name(port)
-                    port_report.append([str(port) + '/' + pro_name, 'open', ser_name])
-                    # print(f'\t\t{port}/{pro_name}\t\topen\t\t{ser_name}')
+        if self.re_state == False:
+            # Create thread pool for Up speed scan for tool 
+            with ThreadPoolExecutor(len(self.ports)) as executor:
+                # Do test port number with host on pool of thread
+                results = executor.map(self.test_port_number_forrange, [self.host]*len(self.ports), self.ports)
+                print(f'Host: {self.host} via IP address: [{gethostbyname(self.host)}]')
+                port_report = []
+                port_report.append(['PORT', 'STATE', 'NAME SERVICE'])
+                # Report results
+                # print('\t\tPORT\t\tSTATE\t\tNAME SERVICE\t\t')
+                for port, is_open in zip(self.ports, results):
+                    if is_open:
+                        pro_name, ser_name = self.find_service_name(port)
+                        port_report.append([str(port) + '/' + pro_name, 'open', ser_name])
+                        # print(f'\t\t{port}/{pro_name}\t\topen\t\t{ser_name}')
+                
+                port_report_table = SingleTable(port_report)
+                port_report_table.title = 'Find Port...'
+                print(port_report_table.table)
+        if self.re_state == True:
+            # Create thread pool for Up speed scan for tool 
+            with ThreadPoolExecutor(len(self.ports)) as executor:
+                # Do test port number with host on pool of thread
+                results = executor.map(self.test_port_number_forrange, [self.host]*len(self.ports), self.ports)
+                info = f'Host: {self.host} via IP address: [{gethostbyname(self.host)}]'
+                port_report = []
+                for port, is_open in zip(self.ports, results):
+                    if is_open:
+                        pro_name, ser_name = self.find_service_name(port)
+                        port_report.append([str(port) + '/' + pro_name, 'open', ser_name])
+                        # print(f'\t\t{port}/{pro_name}\t\topen\t\t{ser_name}')
+                
+                return info, port_report
+                
             
-            port_report_table = SingleTable(port_report)
-            port_report_table.title = 'Find Port...'
-            print(port_report_table.table) 
             
 
                         
