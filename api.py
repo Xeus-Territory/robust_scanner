@@ -129,9 +129,6 @@ def cve_search_func():
         "CVE report": cve_report
     })
         
-        
-    
-
 @app.route('/apiv1/robust_scanner/vul_scan', methods=['GET'])
 def vul_scan_func():
     DOMAIN = request.args.get('domain')
@@ -188,4 +185,4 @@ def vul_scan_func():
         })
 
         
-app.run(host='192.168.137.1', port=5000, debug=True)
+app.run(host='127.0.0.1', port=50000, debug=True)

@@ -157,7 +157,7 @@ def tech_scanner(DB, URL, re_state=False):
             report = wappalyzer.analyze_with_versions_and_categories(webpage)
             tech_report = []
             for i in report.keys():
-                tech_report.append([i, list(report[i].values())[1][0], "" if len(list(report[i].values())[0]) == 0 else list(report[i].values())[0][0]])
+                tech_report.append([i, list(report[i].values())[1][0], "Can't Detect" if len(list(report[i].values())[0]) == 0 else list(report[i].values())[0][0]])
             return tech_report
         except requests.exceptions.SSLError:
             return tech_report
@@ -201,7 +201,7 @@ def vul_scanner(URL, sN, sS):
         time.sleep(1)
         vul_scanner.print_report(scan_results)
         
-# commandline_Action()
+#commandline_Action()
     
         
 
