@@ -185,4 +185,4 @@ def vul_scan_func():
         })
 
         
-app.run(host='127.0.0.1', port=50000, debug=True)
+app.run(host='0.0.0.0', port=50000, debug=True)
