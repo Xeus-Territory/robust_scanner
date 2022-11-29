@@ -3,6 +3,8 @@ from portScan import PortScan
 from robustScan import tech_scanner, get_url
 from zapScanner import zapScanner
 from cve_search import find_cve_ref
+from socket import gethostbyname
+from cve_search import detail_cve_ref
 import time
 
 app = Flask(__name__)
@@ -109,7 +111,8 @@ def tech_scan_func():
     DB = request.args.get('db')
     url = get_url(DOMAIN, HTTPS, WWW)
     tech_report = tech_scanner(DB, url, re_state=True)
-    return jsonify({      
+    return jsonify({   
+        "Infomation of Host" : f'Host: {DOMAIN} via IP address: {gethostbyname(DOMAIN)}',               
         "Tech Report" : tech_report
     })
 
@@ -126,7 +129,15 @@ def cve_search_func():
         cve_report.append(find_cve_ref(re[0]))
         
     return jsonify({
+        "Infomation of Host" : f'Host: {DOMAIN} via IP address: {gethostbyname(DOMAIN)}',
         "CVE report": cve_report
+    })
+
+@app.route('/apiv1/robust_scanner/detail_cve', methods=['GET'])
+def detail_cve_func():
+    CVE_ID = request.args.get('id')
+    return jsonify({
+        f"Detail of {CVE_ID}": detail_cve_ref(CVE_ID)
     })
         
 @app.route('/apiv1/robust_scanner/vul_scan', methods=['GET'])
@@ -147,6 +158,7 @@ def vul_scan_func():
         vul_scanner.start(scan_name=sN, target=url)
         time.sleep(1)
         return jsonify({
+            "Infomation of Host" : f'Host: {DOMAIN} via IP address: {gethostbyname(DOMAIN)}',
             'vul_scanner_report': 'Vulnerability Scan Now'
         })
 
@@ -154,6 +166,7 @@ def vul_scan_func():
         vul_scanner.pause(scan_name=sN)
         time.sleep(1)
         return jsonify({
+            "Infomation of Host" : f'Host: {DOMAIN} via IP address: {gethostbyname(DOMAIN)}',
             'vul_scanner_report': 'Vulnerability Scan Paused' 
         })
         
@@ -161,6 +174,7 @@ def vul_scan_func():
         vul_scanner.resume(scan_name=sN)
         time.sleep(1)
         return jsonify({
+            "Infomation of Host" : f'Host: {DOMAIN} via IP address: {gethostbyname(DOMAIN)}',
             'vul_scanner_report': 'Vulnerability Scan Resumed'
         })  
 
@@ -168,6 +182,7 @@ def vul_scan_func():
         vul_scanner.stop(scan_name=sN)
         time.sleep(1)
         return jsonify({
+            "Infomation of Host" : f'Host: {DOMAIN} via IP address: {gethostbyname(DOMAIN)}',
             'vul_scanner_report': 'Vulnerability Scan Stopped'
         })
 
@@ -175,12 +190,14 @@ def vul_scan_func():
         vul_scanner.get_scan_status(scan_name=sN, scan_status_list=scan_status_list)
         time.sleep(1)
         return jsonify({
+            "Infomation of Host" : f'Host: {DOMAIN} via IP address: {gethostbyname(DOMAIN)}',
             'vul_scanner_report': scan_status_list
         })
     
     if sS == 'result':
         vul_scanner.get_scan_results(scan_name=sN, scan_results=vulnerable_report)
         return jsonify({
+            "Infomation of Host" : f'Host: {DOMAIN} via IP address: {gethostbyname(DOMAIN)}',
             'vul_scanner_report': vul_report_convert(vulnerable_report)
         })
 

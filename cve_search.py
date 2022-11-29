@@ -16,3 +16,10 @@ def detail_cve_ref(cve_id):
         return cve_detail
     except:
         return 'Not find detail of' + cve_id
+    
+def detail_cve_ref_V2(cve_mitre_url):
+    try:
+        cve_detail = crawler.get_detail(cve_mitre_url)
+        return cve_detail
+    except:
+        return 'Not find detail of' + cve_mitre_url
