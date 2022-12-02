@@ -37,7 +37,7 @@ def vul_report_convert(vul_report):
             "Risk": risk, 
             "Serverity": severity, 
             "CVE-CWE ID": cve_id, 
-            "URL Targer": urls, 
+            "URL Target": urls, 
             "Description": description, 
             "Solution": solution, 
             "Report By": reported_by
