@@ -8,3 +8,5 @@ flask-restful
 flask_restplus
 mitrecve
 pycvesearch
+json
+json2html

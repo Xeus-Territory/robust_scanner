@@ -95,7 +95,7 @@ Tech Scanner - Scan Technology on the target server<br>
         DOMAIN = request.args.get('domain') <Obligatory>
         HTTPS = request.args.get('https') <Option: addon>
         WWW = request.args.get('www') <Option: addon>
-        DB = request.args.get('db') <Option: addon>
+        DB = request.args.get('db') <Option: addon> (True or Not Callback)
 
 Instruction
 
@@ -134,34 +134,40 @@ Result
         
 ---
 CVE Search - Reference to vulnerability (Ex: CVE) with Technology cve_search<br>
-    *parameter: domain, https, www, db*
+    *parameter: domain, https, www, db, sN, save*
     
         DOMAIN = request.args.get('domain') <Obligatory>
         HTTPS = request.args.get('https') <Option: addon>
         WWW = request.args.get('www') <Option: addon>
-        DB = request.args.get('db') <Option: addon>
+        DB = request.args.get('db') <Option: addon> (True or Not Callback)
+        sN = request.args.get('sN') <Option: addon>
+        SAVE = request.args.get('save') <Option: addon> (True or None)
 
 Instruction
 
-        http://<IP Or Domain name>:<port>/apiv1/robust_scanner/cve_search?domain=?&https=?&www=?&db=?
+        http://<IP Or Domain name>:<port>/apiv1/robust_scanner/cve_search?domain=?&https=?&www=?&db=?&sN=?&save=?
 Result
 
         {
-            "CVE report": [
-                [
-                [
-                    0, 
-                    {
-                    "DESC": "Ecommerce-CodeIgniter-Bootstrap before commit 56465f was discovered to contain a cross-site scripting (XSS) vulnerability via the function base_url() at /blog/blogpublish.php.", 
-                    "ID": "CVE-2022-35213", 
-                    "URL": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-35213", 
-                    "__PACKAGE": "Bootstrap"
-                    }
-                ]
-                ]
+        "CVE report": [
+            {
+            "CVE_ID": "CVE-2022-35213", 
+            "Description of CVE": "Ecommerce-CodeIgniter-Bootstrap before commit 56465f was discovered to contain a cross-site scripting (XSS) vulnerability via the function base_url() at /blog/blogpublish.php.", 
+            "Package of Tech": "Bootstrap", 
+            "URL of CVE": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-35213"
+            }, 
+            {
+            "CVE_ID": "CVE-2022-32563", 
+            "Description of CVE": "An issue was discovered in Couchbase Sync Gateway 3.x before 3.0.2. Admin credentials are not verified when using X.509 client-certificate authentication from Sync Gateway to Couchbase Server. When Sync Gateway is configured to authenticate with Couchbase Server using X.509 client certificates, the admin credentials provided to the Admin REST API are ignored, resulting in privilege escalation for unauthenticated users. The Public REST API is not impacted by this issue. A workaround is to replace X.509 certificate based authentication with Username and Password authentication inside the bootstrap configuration.", 
+            "Package of Tech": "Bootstrap", 
+            "URL of CVE": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-32563"
+            }
             ]
         }
 
+Exceptions:
+
+        On the situation where the file is existing on server --> Return 500 Internal Server Error
 ---
 CVE Detail - CVE details for get POC or reference to this one by using `https://cve.circl.lu/`
     *parameter: id --> (This is respective for cve_id. Example: id=CVE-2022-35213*
@@ -280,17 +286,18 @@ Result
 
 ---
 Vulnerability Scanner - Scan vulnerability on the target server with ZAP proxy <br>
-    *parameter: domain, https, www, sN, sS*
+    *parameter: domain, https, www, sN, sS, save*
 
         DOMAIN = request.args.get('domain') <Obligatory>
         HTTPS = request.args.get('https') <Option: addon>
         WWW = request.args.get('www') <Option: addon>
         sN = request.args.get('sN') <Obligatory>
         sS = request.args.get('sS') <Obligatory>
+        SAVE = request.args.get('save') <Option: addon> (use for sS=result) (True or None)
 
 Instruction
 
-        http://<IP Or Domain name>:<port>/apiv1/robust_scanner/vul_scan?domain=?&https=?&www=?&sN=?&sS=?
+        http://<IP Or Domain name>:<port>/apiv1/robust_scanner/vul_scan?domain=?&https=?&www=?&sN=?&sS=?&save=?
 Result
 
         {
@@ -315,32 +322,52 @@ Result
         }
 ---
         {
-            "vul_scanner_report": [
-                [
-                1, 
-                "Modern Web Application", 
-                "Informational", 
-                0, 
-                "-1", 
-                "(5 URLs) http://zero.webappsecurity.com", 
-                "The application appears to be a modern web application. If you need to explore it automatically then the Ajax Spider may well be more effective than the standard one.", 
-                "This is an informational alert and so no changes are required.", 
-                "ZAP"
-                ], 
-                [
-                2, 
-                "Information Disclosure - Suspicious Comments", 
-                "Informational", 
-                0, 
-                "200", 
-                "(3 URLs) http://zero.webappsecurity.com/resources/js/bootstrap.min.js", 
-                "The response appears to contain suspicious comments which may help an attacker. Note: Matches made within script blocks or files are against the entire content not only comments.", 
-                "Remove all comments that return information that may help an attacker and fix any underlying problems they refer to.", 
-                "ZAP"
-                ]
-                ]
+        "Information of Host": "Host: zero.webappsecurity.com via IP address: 54.82.22.214",
+        "vul_scanner_report": [
+            {
+                "Count": 1,
+                "NameVulnerable": "Modern Web Application",
+                "Risk": "Informational",
+                "Serverity": 0,
+                "CVE-CWE ID": "-1",
+                "URL Targer": "(5 URLs) http://zero.webappsecurity.com/index.html",
+                "Description": "The application appears to be a modern web application. If you need to explore it automatically then the Ajax Spider may well be more effective than the standard one.",
+                "Solution": "This is an informational alert and so no changes are required.",
+                "Report By": "ZAP"
+            },
+            {
+                "Count": 2,
+                "NameVulnerable": "Information Disclosure - Suspicious Comments",
+                "Risk": "Informational",
+                "Serverity": 0,
+                "CVE-CWE ID": "200",
+                "URL Targer": "(3 URLs) http://zero.webappsecurity.com/resources/js/jquery-1.8.2.min.js",
+                "Description": "The response appears to contain suspicious comments which may help an attacker. Note: Matches made within script blocks or files are against the entire content not only comments.",
+                "Solution": "Remove all comments that return information that may help an attacker and fix any underlying problems they refer to.",
+                "Report By": "ZAP"
+            }
+        ]
         }
 
+Exceptions:
+
+        On the situation where the file is existing on server --> Return 500 Internal Server Error
+---
+Visuallize json report - Visuallize json report have exist on server
+    *parameter: name*
+
+        nameReport = request.args.get('name') <Obligatory>
+
+Instruction
+
+        http://<IP Or Domain name>:<port>/apiv1/robust_scanner/get_report?name=?
+
+Result: 
+        ![](get_report_present.png)
+
+Exceptions
+
+        On the situation where the file is existing on server --> Return 500 Internal Server Error
 ## Step by Step to install robust_scanner
 1.  Clone the repository
 2.  Install ZAP (Zed Attack Proxy) with the [GUI Version](https://www.zaproxy.org/) or reference the repository for information [GitHub](https://github.com/zaproxy/zaproxy)

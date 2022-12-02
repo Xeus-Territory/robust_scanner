@@ -3,3 +3,4 @@ scans.json
 __pycache__
 ports.json
 techs.json
+Data/*

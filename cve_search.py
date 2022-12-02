@@ -6,7 +6,11 @@ CVE_SEARCH = CVESearch('https://cve.circl.lu/')
 def find_cve_ref(keyword):
     try:
         cve_simple = crawler.get_main_page(keyword)
-        return list(cve_simple.items())[:10]
+        original = list(cve_simple.items())[:10]
+        processData = []
+        for obj in original:
+            processData.append(obj[1])
+        return processData
     except:
         return 'Not find CVE ref with keyword ' + keyword
     

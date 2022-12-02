@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, abort, Response
 from portScan import PortScan
 from robustScan import tech_scanner, get_url
 from zapScanner import zapScanner
@@ -6,6 +6,8 @@ from cve_search import find_cve_ref
 from socket import gethostbyname
 from cve_search import detail_cve_ref
 import time
+import json
+from json2html import *
 
 app = Flask(__name__)
 
@@ -29,7 +31,17 @@ def vul_report_convert(vul_report):
         
         urls = f'({len(urls)} URLs) {urls[0]}' if urls else ''
         
-        scan_report.append([count, name, risk, severity, cve_id, urls, description, solution, reported_by])
+        scan_report.append({
+            "Count": count, 
+            "NameVulnerable": name, 
+            "Risk": risk, 
+            "Serverity": severity, 
+            "CVE-CWE ID": cve_id, 
+            "URL Targer": urls, 
+            "Description": description, 
+            "Solution": solution, 
+            "Report By": reported_by
+            })
     return scan_report
 
 @app.route('/')
@@ -52,17 +64,17 @@ def port_scan_func():
             pScan_object = PortScan(DOMAIN, range(20, 10000, 1), PROTOCOL, re_state=True)
             info, port_report = pScan_object.port_scan_forrange()
             return jsonify({
-                "Infomation of Host" : info,
+                "Information of Host" : info,
                 "Port report" : port_report  
             })
         except OSError:
             return jsonify({
-                "Infomation of Host" : info,
+                "Information of Host" : info,
                 "Port report": 'NOT FOUND ANY PORT WITH PROTOCOL {protocol}'.format(protocol=PROTOCOL.upper())
             })
         except:
             return jsonify({
-                "Infomation of Host" : info,
+                "Information of Host" : info,
                 "Port report": 'ERROR ON THE PROCESSING! TRY AGAIN'
             })
     if OPTION == 'range':
@@ -70,17 +82,17 @@ def port_scan_func():
             pScan_object = PortScan(DOMAIN, range(int(START), int(END),1), PROTOCOL, re_state=True)
             info, port_report = pScan_object.port_scan_forrange()
             return jsonify({
-                "Infomation of Host" : info,
+                "Information of Host" : info,
                 "Port report" : port_report  
             })
         except OSError:
             return jsonify({
-                "Infomation of Host" : info,
+                "Information of Host" : info,
                 "Port report": 'NOT FOUND ANY PORT WITH PROTOCOL {protocol}'.format(protocol=PROTOCOL.upper())
             })
         except:
             return jsonify({
-                "Infomation of Host" : info,
+                "Information of Host" : info,
                 "Port report": 'ERROR ON THE PROCESSING! TRY AGAIN'
             })
     if OPTION == 'particular':
@@ -89,17 +101,17 @@ def port_scan_func():
             pScan_object = PortScan(DOMAIN, int(PORT), PROTOCOL, re_state=True)
             info, port_report = pScan_object.port_scan()
             return jsonify({
-                "Infomation of Host" : info,
+                "Information of Host" : info,
                 "Port report" : port_report  
             })
         except OSError:
             return jsonify({
-                "Infomation of Host" : info,
+                "Information of Host" : info,
                 "Port report": 'NOT FOUND ANY PORT WITH PROTOCOL {protocol}'.format(protocol=PROTOCOL.upper())
             })
         except:
             return jsonify({
-                "Infomation of Host" : info,
+                "Information of Host" : info,
                 "Port report": 'ERROR ON THE PROCESSING! TRY AGAIN'
             })
             
@@ -112,7 +124,7 @@ def tech_scan_func():
     url = get_url(DOMAIN, HTTPS, WWW)
     tech_report = tech_scanner(DB, url, re_state=True)
     return jsonify({   
-        "Infomation of Host" : f'Host: {DOMAIN} via IP address: {gethostbyname(DOMAIN)}',               
+        "Information of Host" : f'Host: {DOMAIN} via IP address: {gethostbyname(DOMAIN)}',               
         "Tech Report" : tech_report
     })
 
@@ -122,16 +134,37 @@ def cve_search_func():
     HTTPS = request.args.get('https')
     WWW = request.args.get('www')
     DB = request.args.get('db')
+    SAVE = request.args.get('save')
+    sN = request.args.get('sN')
     url = get_url(DOMAIN, HTTPS, WWW)
     tech_report = tech_scanner(DB, url, re_state=True)
     cve_report = []
     for re in tech_report:
-        cve_report.append(find_cve_ref(re[0]))
-        
-    return jsonify({
-        "Infomation of Host" : f'Host: {DOMAIN} via IP address: {gethostbyname(DOMAIN)}',
+        cve_refs = find_cve_ref(re[0])
+        for cve in cve_refs:
+            PACKAGE = cve["__PACKAGE"]
+            ID = cve["ID"]
+            URL = cve["URL"]
+            DESC = cve["DESC"]
+            cve_report.append({
+                "Package of Tech" : PACKAGE,
+                "CVE_ID": ID,
+                "URL of CVE": URL,
+                "Description of CVE": DESC
+            })
+    data = {
+        "Information of Host" : f'Host: {DOMAIN} via IP address: {gethostbyname(DOMAIN)}',
         "CVE report": cve_report
-    })
+    }
+    if SAVE != None:
+        try:
+            data['nameSave'] = sN + ".json" 
+            json_object = json.dumps(data, indent=3)
+            f = open("Data/" + sN + ".json", 'x')
+            f.write(json_object)
+        except:
+            abort(500)
+    return jsonify(data)
 
 @app.route('/apiv1/robust_scanner/detail_cve', methods=['GET'])
 def detail_cve_func():
@@ -145,6 +178,7 @@ def vul_scan_func():
     DOMAIN = request.args.get('domain')
     HTTPS = request.args.get('https')
     WWW = request.args.get('www')
+    SAVE = request.args.get('save')
     sN = request.args.get('sN')
     sS = request.args.get('sS')
     
@@ -154,11 +188,14 @@ def vul_scan_func():
     vulnerable_report = {}
     scan_status_list = []
     
+    if sS not in ['start', 'stop', 'resume', 'pause', 'status', 'result']:
+        abort(500)
+    
     if  sS == 'start':
         vul_scanner.start(scan_name=sN, target=url)
         time.sleep(1)
         return jsonify({
-            "Infomation of Host" : f'Host: {DOMAIN} via IP address: {gethostbyname(DOMAIN)}',
+            "Information of Host" : f'Host: {DOMAIN} via IP address: {gethostbyname(DOMAIN)}',
             'vul_scanner_report': 'Vulnerability Scan Now'
         })
 
@@ -166,7 +203,7 @@ def vul_scan_func():
         vul_scanner.pause(scan_name=sN)
         time.sleep(1)
         return jsonify({
-            "Infomation of Host" : f'Host: {DOMAIN} via IP address: {gethostbyname(DOMAIN)}',
+            "Information of Host" : f'Host: {DOMAIN} via IP address: {gethostbyname(DOMAIN)}',
             'vul_scanner_report': 'Vulnerability Scan Paused' 
         })
         
@@ -174,7 +211,7 @@ def vul_scan_func():
         vul_scanner.resume(scan_name=sN)
         time.sleep(1)
         return jsonify({
-            "Infomation of Host" : f'Host: {DOMAIN} via IP address: {gethostbyname(DOMAIN)}',
+            "Information of Host" : f'Host: {DOMAIN} via IP address: {gethostbyname(DOMAIN)}',
             'vul_scanner_report': 'Vulnerability Scan Resumed'
         })  
 
@@ -182,7 +219,7 @@ def vul_scan_func():
         vul_scanner.stop(scan_name=sN)
         time.sleep(1)
         return jsonify({
-            "Infomation of Host" : f'Host: {DOMAIN} via IP address: {gethostbyname(DOMAIN)}',
+            "Information of Host" : f'Host: {DOMAIN} via IP address: {gethostbyname(DOMAIN)}',
             'vul_scanner_report': 'Vulnerability Scan Stopped'
         })
 
@@ -190,16 +227,43 @@ def vul_scan_func():
         vul_scanner.get_scan_status(scan_name=sN, scan_status_list=scan_status_list)
         time.sleep(1)
         return jsonify({
-            "Infomation of Host" : f'Host: {DOMAIN} via IP address: {gethostbyname(DOMAIN)}',
+            "Information of Host" : f'Host: {DOMAIN} via IP address: {gethostbyname(DOMAIN)}',
             'vul_scanner_report': scan_status_list
         })
     
     if sS == 'result':
         vul_scanner.get_scan_results(scan_name=sN, scan_results=vulnerable_report)
-        return jsonify({
-            "Infomation of Host" : f'Host: {DOMAIN} via IP address: {gethostbyname(DOMAIN)}',
+        data = {
+            "Information of Host" : f'Host: {DOMAIN} via IP address: {gethostbyname(DOMAIN)}',
             'vul_scanner_report': vul_report_convert(vulnerable_report)
-        })
+        }
+        if SAVE != None:
+            try:
+                data['nameSave'] = sN + ".json" 
+                json_object = json.dumps(data, indent=3)
+                f = open("Data/" + sN + ".json", 'x')
+                f.write(json_object)
+            except:
+                abort(500)
+        return jsonify(data)
 
+@app.errorhandler(500)
+def internal_error(error):
+    return error
+
+@app.errorhandler(404)
+def notfound_error(error):
+    return error
+
+@app.route('/apiv1/robust_scanner/get_report', methods=['GET'])
+def get_report():
+    try:
+        nameReport = request.args.get('name')
+        file = open("Data/" + nameReport + '.json', 'r')
+        # return json.dumps(file.read(), indent=3)
+        visuallize = json2html.convert(json=file.read())
+        return visuallize
+    except:
+        abort(500)
         
 app.run(host='0.0.0.0', port=50000, debug=True)
