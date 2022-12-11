@@ -375,7 +375,7 @@ Exceptions
     Ex: `ZAP_API_KEY='xxxxxxxxx'`
 4. Create `scans.json` to store the results of ZAP scan
 5.  Install all required for project from requirements.txt with the following command: `pip install -r requirements.txt` (Need to install [pip](https://pip.pypa.io/en/stable/installation/) before)
-6.  Run this tool with the following command: `python api.py` or `python robust_scanner`
+6.  Run this tool with the following command: `python api.py` or `python robustScan.py`
 
 Note: Docker version can be released on soon as it will be available
 
